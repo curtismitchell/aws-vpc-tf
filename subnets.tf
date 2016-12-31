@@ -1,20 +1,16 @@
-variable "public_subnet_cidrs" { }
-variable "private_subnet_cidrs" { }
-variable "availability_zones" { }
-
 /* public subnets - traffic from the internet is routed to them.
     More than one for fault tolerance across multiple locations. */
 resource "aws_subnet" "public" {
     vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "${element(split(",", var.public_subnet_cidrs), count.index)}"
-    count = "${length(compact(split(",", var.public_subnet_cidrs)))}"
+    cidr_block = "${element(var.public_subnet_cidrs, count.index)}"
+    count = "${length(compact(var.public_subnet_cidrs))}"
 
     map_public_ip_on_launch = true
 
-    availability_zone = "${element(split(",", var.availability_zones), count.index)}"
+    availability_zone = "${element(var.availability_zones, count.index)}"
 
     tags {
-        Name = "public-${element(split(",", var.availability_zones), count.index)}"
+        Name = "public-${element(var.availability_zones, count.index)}"
     }
 }
 
@@ -45,7 +41,7 @@ resource "aws_route_table" "igw" {
 resource "aws_route_table_association" "p" {
     subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
     route_table_id = "${aws_route_table.igw.id}"
-    count = "${length(compact(split(",", var.public_subnet_cidrs)))}"
+    count = "${length(compact(var.public_subnet_cidrs))}"
 }
 
 // PRIVATE SUBNETS
@@ -54,14 +50,14 @@ resource "aws_route_table_association" "p" {
     More than one for fault tolerance across multiple locations. */
 resource "aws_subnet" "private" {
     vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "${element(split(",", var.private_subnet_cidrs), count.index)}"
-    count = "${length(compact(split(",", var.private_subnet_cidrs)))}"
+    cidr_block = "${element(var.private_subnet_cidrs, count.index)}"
+    count = "${length(compact(var.private_subnet_cidrs))}"
 
     map_public_ip_on_launch = false
 
-    availability_zone = "${element(split(",", var.availability_zones), count.index)}"
+    availability_zone = "${element(var.availability_zones, count.index)}"
 
     tags {
-        Name = "private-${element(split(",", var.availability_zones), count.index)}"
+        Name = "private-${element(var.availability_zones, count.index)}"
     }
 }
